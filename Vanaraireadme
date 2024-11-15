@@ -1,0 +1,13 @@
+Small projects 
+Create a student &  course  Object create relationship between them  M-M  Create one junction object ,
+
+Requirement 
+
+write trigger when a new course is added assign a next time slot 
+
+if course 1 & course 2 are allocated 8-9 and 9-10 time slot thn course 3 is added time slot 11 will be automatically allotted 
+
+Git hub repository creation 
+User Name :csrexecutivevanarai@gmail.com
+Pwd:Github@5555
+Repository Name :Vanarai Devops
