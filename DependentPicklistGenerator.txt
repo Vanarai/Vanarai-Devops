@@ -1,0 +1,147 @@
+public with sharing class DependentPicklistGenerator {
+   /* @AuraEnabled(cacheable=true)
+    public static String fetchDependentPicklistValues(){
+        Map<String,List<Map<String,List<String>>>> MapOfDependentPicklsit = new Map<String,List<Map<String,List<String>>>>();
+        Map<String,List<Map <String, List<Map< String,List<String>>>>>> M1 = new  Map<String,List<Map <String, List<Map< String,List<String>>>>>>();
+        for(Maharashtra_Village_Information__c ag : [SELECT State__c, District__c, Taluka__c, Village__c 
+        from Maharashtra_Village_Information__c  ]){ 
+           // Map<String,List<String>> mapOfRatingAndIndustry = new Map<String,List<String>>();
+
+            Map<String,List<String>> mapOfRatingAndIndustry = new Map<String,List<String>>();  //MAP<State, List<Dist>>
+            Map<String, List<String>> mapoftalandvil= new Map<String, List<String>>();
+            
+             if(mapOfRatingAndIndustry.containsKey(String.valueOf(ag.get('District__c')))){
+                mapOfRatingAndIndustry.get(String.valueOf(ag.get('District__c'))).add(String.valueOf(ag.get('Taluka__c')));
+
+                if (mapoftalandvil.containsKey(String.valueOf(ag.get('Taluka__c')))){
+                    mapoftalandvil.get(String.valueOf(ag.get('Taluka__c'))).add(String.valueOf(ag.get('Village__c')));
+                }
+                
+
+            // if(mapOfRatingAndIndustry.containsKey(String.valueOf(ag.get('Taluka__c')))){
+            //     mapOfRatingAndIndustry.get(String.valueOf(ag.get('Taluka__c'))).add(String.valueOf(ag.get('Village__c')));
+            }else{
+                mapOfRatingAndIndustry.put(String.valueOf(ag.get('Taluka__c')),new List<String>{String.valueOf(ag.get('Village__c'))});
+            }
+         
+
+           
+
+
+
+            if(MapOfDependentPicklsit.containsKey(String.valueOf(ag.get('District__c')))){
+                MapOfDependentPicklsit.get(String.valueOf(ag.get('District__c'))).add(mapOfRatingAndIndustry);
+            }else{
+                MapOfDependentPicklsit.put(String.valueOf(ag.get('District__c')),new List<Map<String,List<String>>>{mapOfRatingAndIndustry});
+            }
+        }
+         System.debug('###@@passed sub prog id='+MapOfDependentPicklsit);
+        return JSON.serialize(MapOfDependentPicklsit);
+    }*/
+
+
+     @AuraEnabled(cacheable=TRUE)
+    public static List<String> fetchDependentPicklistValues(String StateVal, String DistrictVal){
+      System.debug('StateVal '+ StateVal);
+      System.debug('DistrictVal '+  DistrictVal);
+      //System.debug('TalVal '+ TalVal);
+
+        String currentContext = '';
+        String QueryStr = '';
+        if(StateVal != null){
+
+            currentContext = 'State';
+            QueryStr = 'SELECT District__c from State_Village_info__c where State__c = :StateVal group by District__c order by District__c';
+
+        }else if(DistrictVal != null){
+
+             currentContext = 'District';
+              QueryStr = 'SELECT Taluka__c from State_Village_info__c where District__c = :DistrictVal group by Taluka__c order by Taluka__c';
+
+        }//else if(TalVal != null){
+
+        //     currentContext = 'Taluka';
+        //      QueryStr = 'SELECT Village__c from State_Village_info__c where Taluka__c = :TalVal group by Village__c';
+        // }
+
+       // String finalQuery = QueryStr;
+        AggregateResult[] selectedList ;
+        List<String> resultList = new List<String>();
+
+        try{
+            System.debug('final query '+ QueryStr);
+            selectedList = Database.query(QueryStr);
+
+            for(AggregateResult ar :selectedList){
+                if(currentContext == 'State'){
+                     resultList.add(String.valueOf(ar.get('District__c')));
+                }else if(currentContext == 'District'){
+                    resultList.add(String.valueOf(ar.get('Taluka__c')));
+                }// else if(currentContext == 'Taluka'){
+                //      resultList.add(String.valueOf(ar.get('Village__c')));
+                // }
+            }
+            return resultList;
+
+        }catch(Exception e){
+            System.debug('error'+ e.getMessage());
+        }
+
+         System.debug('###@@passed sub prog id='+resultList);
+        return resultList;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<State_Village_info__c> fetchVillagePicklistValues(String TalVal){
+   
+        String QueryStr = '';
+        if(TalVal != null){
+             QueryStr = 'SELECT Village__c from State_Village_info__c where Taluka__c = :TalVal order by Village__c';
+        }
+        List<State_Village_info__c> resultList = new List<State_Village_info__c>();
+        try{
+            System.debug('final query '+ QueryStr);
+            resultList = Database.query(QueryStr);
+            return resultList;
+
+        }catch(Exception e){
+            System.debug('error'+ e.getMessage());
+        }
+
+         System.debug('villages list='+resultList);
+        return resultList;
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static String addVillagesToProject(List<Project_State_Villages__c> projectVillagesList){
+       
+        if(projectVillagesList.size() > 0 ){
+           System.debug('projectVillagesList '+ projectVillagesList);
+          // insert projectVillagesList;  //DML
+           Database.SaveResult[] srList = Database.insert(projectVillagesList, false);
+           // Iterate through each returned result
+            for (Database.SaveResult sr : srList) {
+                if (sr.isSuccess()) {
+                    // Operation was successful, so get the ID of the record that was processed
+                    System.debug('Successfully inserted account. Account ID: ' + sr.getId());
+                     return 'success';
+                }
+                else {
+                    // Operation failed, so get all errors                
+                    for(Database.Error err : sr.getErrors()) {
+                        System.debug('The following error has occurred.');                    
+                        System.debug(err.getStatusCode() + ': ' + err.getMessage());
+                        System.debug('Account fields that affected this error: ' + err.getFields());
+                    }
+                     return '***fail';
+                }
+                
+            }
+            return 'success';
+        }else{
+             return 'fail';
+        }
+       
+    }
+    
+}
