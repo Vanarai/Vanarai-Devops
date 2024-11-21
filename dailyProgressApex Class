@@ -1,0 +1,42 @@
+Code-  Show grandchild record from parent record
+  
+public with sharing class dailyProgress {
+    @AuraEnabled(cacheable=true)
+    public static List<vnr_WIP__c> getWIPRecords(Id programId) {
+        return [SELECT Id, Name, vnr_wip_UOM__c, totalWork__c, billingRate__c, activityBillableAmount__c
+                FROM vnr_WIP__c 
+                WHERE baseActivity_subProject__r.vnr_Main_Program__c = :programId
+                ORDER BY baseActivity_subProject__r.name];
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Day_to_Day_Progress__c> getChildRecords(Id wipId) {
+        return [
+            SELECT Id, Name, Date__c, Quantity__c, Issues_Faced__c
+            FROM Day_to_Day_Progress__c
+            WHERE WIP__c = :wipId
+        ];
+    }
+
+    @AuraEnabled
+    public static void saveRecords(List<Day_to_Day_Progress__c> daytodayToUpdate){
+        try {
+            if (!daytodayToUpdate.isEmpty()) {
+                update daytodayToUpdate;
+            }
+        } catch (Exception e) {
+            throw new AuraHandledException('Error: ' + e.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static List<Day_to_Day_Progress__c> createRecords(List<Day_to_Day_Progress__c> progressRecordsToInsert) {
+        try {
+            insert progressRecordsToInsert;
+            return progressRecordsToInsert;
+        } catch (Exception e) {
+            throw new AuraHandledException('Error: ' + e.getMessage());
+        }
+    }
+    //   
+}
