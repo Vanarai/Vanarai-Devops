@@ -1,0 +1,23 @@
+<template>
+    <div class="slds-grid slds-gutters">
+        <div class="slds-col slds-size_1-of-2">
+            <!-- WIP Records Table -->
+            <lightning-card title="WIP Records">
+                <lightning-datatable data={wipRecords} columns={columnsWIP} key-field="id" max-row-selection="1"
+                    onrowselection={handleWIPSelection}>
+                </lightning-datatable>
+            </lightning-card>
+        </div>
+        <div class="slds-col slds-size_1-of-2">
+            <!-- Daily Progress Records Table -->
+            <lightning-card title="Daily Progress Records">
+                <lightning-datatable data={dailyProgressRecords} columns={columnsDailyProgress} key-field="id"
+                    draft-values={draftValues} >
+                </lightning-datatable>
+
+                <lightning-button label="Add New Work Status" onclick={handleAddRow}></lightning-button>
+                <lightning-button label="Create" onclick={handleCreate}></lightning-button>
+            </lightning-card>
+        </div>
+    </div>
+</template>
